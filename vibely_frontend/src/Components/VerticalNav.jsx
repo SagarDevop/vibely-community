@@ -1,0 +1,48 @@
+import React from "react";
+import { HomeIcon, MagnifyingGlassIcon, ChatBubbleLeftRightIcon, BellIcon, UserCircleIcon, PlusIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
+import { Link, useLocation } from "react-router-dom";
+export default function VerticalNav({ currentUser, onLogout }) {
+  const navItems = [
+    { name: "Home", icon: <HomeIcon className="w-6 h-6" />, path: "/feed" },
+    { name: "Search", icon: <MagnifyingGlassIcon className="w-6 h-6" />, path: "/search" },
+    { name: "Post", icon: <PlusIcon className="w-6 h-6" />, path: "/Post" },
+    { name: "Message", icon: <ChatBubbleLeftRightIcon className="w-6 h-6" />, path: "/message" },
+    { name: "Notifications", icon: <BellIcon className="w-6 h-6" />, path: "/notifications" },
+    { name: "Profile", icon: <UserCircleIcon className="w-6 h-6" />, path: `/profile/${currentUser?.username}` },
+  ];
+  const location = useLocation();
+
+  return (
+    <div className="flex flex-col justify-between h-screen w-[15vw] bg-[#222629] text-white p-4 border border-[#6B6E70]/30">
+      
+      <div className="flex flex-col  gap-6 mt-4">
+        
+        <div className="text-[#86C232] font-bold text-2xl ml-3 mb-6">Vibely</div>
+
+        {navItems.map((item) => {
+        const active = location.pathname === item.path;
+        return (
+          <Link
+            key={item.name}
+            to={item.path}
+            className={`flex gap-3 items-center  w-full p-2 rounded-lg transition-colors
+              ${active ? "bg-[#86C232] text-[#222629]" : "hover:bg-[#474B4F]"}`}
+            title={item.name}
+          >
+            {item.icon} {item.name}
+          </Link>
+        );
+      })}
+      </div>
+
+      {/* Bottom logout */}
+      <button
+        className="flex flex-col w-full p-2 rounded-lg hover:bg-[#474B4F] transition-colors mb-4"
+        onClick={onLogout}
+        title="Logout"
+      >
+        <ArrowRightOnRectangleIcon className="w-6 h-6" />
+      </button>
+    </div>
+  );
+}
