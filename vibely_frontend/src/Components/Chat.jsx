@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import api from "../api"; 
+import api from "../api";
 
 export default function Chat({ otherUserId, currentUserId }) {
   const [messages, setMessages] = useState([]);
@@ -12,6 +12,7 @@ export default function Chat({ otherUserId, currentUserId }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Fetch messages from API
   useEffect(() => {
     if (!otherUserId) return;
 
@@ -36,17 +37,22 @@ export default function Chat({ otherUserId, currentUserId }) {
     fetchMessages();
   }, [otherUserId]);
 
+  // Setup WebSocket
   useEffect(() => {
-    if (!otherUserId) return;
+    if (!otherUserId || !currentUserId) return;
 
     const roomName =
       currentUserId < otherUserId
         ? `${currentUserId}_${otherUserId}`
         : `${otherUserId}_${currentUserId}`;
 
-    socketRef.current = new WebSocket(
-      `ws://127.0.0.1:8000/ws/chat/${roomName}/`
-    );
+    // Determine correct WebSocket URL depending on environment
+    const wsScheme =
+      window.location.protocol === "https:" ? "wss" : "ws";
+    const wsHost = window.location.host; // works both locally and prod
+    const wsUrl = `${wsScheme}://${wsHost}/ws/chat/${roomName}/`;
+
+    socketRef.current = new WebSocket(wsUrl);
 
     socketRef.current.onopen = () =>
       console.log("Connected to chat room:", roomName);
@@ -58,11 +64,20 @@ export default function Chat({ otherUserId, currentUserId }) {
 
     socketRef.current.onerror = (err) => console.error("WebSocket error:", err);
 
-    return () => {
-      socketRef.current.close();
+    socketRef.current.onclose = (e) => {
+      console.log("WebSocket closed, trying to reconnect...");
+      setTimeout(() => {
+        // reconnect logic
+        socketRef.current = new WebSocket(wsUrl);
+      }, 3000);
     };
-  }, [otherUserId]);
 
+    return () => {
+      socketRef.current?.close();
+    };
+  }, [otherUserId, currentUserId]);
+
+  // Auto scroll to bottom
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -84,16 +99,13 @@ export default function Chat({ otherUserId, currentUserId }) {
 
   return (
     <div className="flex flex-col h-full">
-
       <div className="flex-1 overflow-y-auto mb-2 p-1">
         {messages.map((msg, index) => {
           const isSender = msg.sender === currentUserId;
           return (
             <div
               key={index}
-              className={`flex my-1 ${
-                isSender ? "justify-end" : "justify-start"
-              }`}
+              className={`flex my-1 ${isSender ? "justify-end" : "justify-start"}`}
             >
               <div
                 className={`p-2 rounded-2xl max-w-[75%] ${
@@ -109,7 +121,6 @@ export default function Chat({ otherUserId, currentUserId }) {
         })}
         <div ref={messagesEndRef} />
       </div>
-
 
       <div className="flex gap-2 mt-2">
         <input
