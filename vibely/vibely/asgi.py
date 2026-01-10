@@ -3,14 +3,12 @@ from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 
-# Set Django settings
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "vibely.settings")
 
-# HTTP application
 django_asgi_app = get_asgi_application()
 
-# Import routing for WebSockets
-from chat import routing as chat_routing  # Replace 'chat' with your WebSocket app
+# Make sure this points to the app where your ChatConsumer is
+from accounts import routing as chat_routing  # <--- FIXED
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
