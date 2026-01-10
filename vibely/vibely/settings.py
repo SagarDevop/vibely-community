@@ -30,7 +30,12 @@ SECRET_KEY = 'django-insecure-s_4wknvihfr1o5#y@b9qyij^w15qn434cryg#+vk@ct%1oa#8-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "vibely-community.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
+
 
 
 # Application definition
