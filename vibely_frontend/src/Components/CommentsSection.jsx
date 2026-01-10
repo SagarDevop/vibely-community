@@ -8,6 +8,7 @@ export default function CommentsSection({ postId, currentUser }) {
 
   const loadComments = async () => {
     const res = await api.get(`/posts/${postId}/comments/`);
+    console.log("Loaded comments:", res.data);
     setComments(res.data);
   };
 

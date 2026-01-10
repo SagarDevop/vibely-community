@@ -30,10 +30,23 @@ export default function MessageList({ onSelectUser }) {
       {users.map((user) => (
         <div
           key={user.id}
-          className="p-2 rounded-md hover:bg-gray-700 cursor-pointer flex justify-between items-center"
+          className="p-2 rounded-md cursor-pointer flex justify-between items-center"
           onClick={() => onSelectUser(user) }
         >
-          <div className="font-medium">{user.username}</div>
+          <div
+          className="flex items-center w-full gap-3 p-2 rounded-md cursor-pointer transition bg-emerald-500  hover:bg-emerald-950 "
+        >
+          <img
+            src={user.profile.avatar}
+            alt={user.profile.username}
+            className="w-12 h-12 rounded-full object-cover"
+            onClick={() => navigate(`/user/${user.id}`)}
+          />
+          <div>
+            <p className="text-gray-200 font-semibold">{user.profile.name}</p>
+        
+          </div>
+        </div>
         </div>
       ))}
     </div>

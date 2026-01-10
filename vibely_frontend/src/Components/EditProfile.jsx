@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import CropModal from "./CropModal";
 
 export default function EditProfile() {
   const [formData, setFormData] = useState({
@@ -11,6 +12,9 @@ export default function EditProfile() {
     avatar: null,
   });
   const [preview, setPreview] = useState(null);
+  const [cropImage, setCropImage] = useState(null);
+  const [isCropOpen, setIsCropOpen] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,12 +39,23 @@ export default function EditProfile() {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
-      setFormData((prev) => ({ ...prev, avatar: files[0] }));
-      setPreview(URL.createObjectURL(files[0]));
+      const file = files[0];
+      const imageURL = URL.createObjectURL(file);
+
+      setCropImage(imageURL);
+      setIsCropOpen(true); // open crop modal
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
+  const handleCroppedImage = (blob) => {
+  const croppedFile = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+
+  setFormData(prev => ({ ...prev, avatar: croppedFile }));
+  setPreview(URL.createObjectURL(croppedFile));
+  setIsCropOpen(false);
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -132,6 +147,14 @@ export default function EditProfile() {
           Save Changes
         </button>
       </form>
+      {isCropOpen && (
+  <CropModal
+    image={cropImage}
+    onClose={() => setIsCropOpen(false)}
+    onSave={handleCroppedImage}
+  />
+)}
+
     </div>
   );
 }

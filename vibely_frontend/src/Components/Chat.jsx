@@ -1,28 +1,34 @@
 import { useEffect, useState, useRef } from "react";
-import api from "../api";
+import api from "../api"; 
 
 export default function Chat({ otherUserId, currentUserId }) {
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
 
-  // Scroll to bottom when messages update
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      if (!otherUserId) return;
+    if (!otherUserId) return;
 
+    const fetchMessages = async () => {
+      setLoading(true);
       try {
         const res = await api.get(`/messages/?user=${otherUserId}`);
-        console.log(currentUserId, otherUserId);
-        setMessages(res.data);
-        setLoading(false);
+        setMessages(
+          res.data.map((msg) => ({
+            sender: msg.sender,
+            message: msg.text,
+            timestamp: msg.timestamp,
+          }))
+        );
       } catch (err) {
         console.error("Error fetching messages:", err);
+      } finally {
         setLoading(false);
       }
     };
@@ -31,38 +37,60 @@ export default function Chat({ otherUserId, currentUserId }) {
   }, [otherUserId]);
 
   useEffect(() => {
+    if (!otherUserId) return;
+
+    const roomName =
+      currentUserId < otherUserId
+        ? `${currentUserId}_${otherUserId}`
+        : `${otherUserId}_${currentUserId}`;
+
+    socketRef.current = new WebSocket(
+      `ws://127.0.0.1:8000/ws/chat/${roomName}/`
+    );
+
+    socketRef.current.onopen = () =>
+      console.log("Connected to chat room:", roomName);
+
+    socketRef.current.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      setMessages((prev) => [...prev, data]);
+    };
+
+    socketRef.current.onerror = (err) => console.error("WebSocket error:", err);
+
+    return () => {
+      socketRef.current.close();
+    };
+  }, [otherUserId]);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!messageText.trim() || !otherUserId) return;
+  const sendMessage = () => {
+    if (!messageText.trim() || !socketRef.current) return;
 
-    try {
-      await api.post("/messages/", {
-        receiver: otherUserId,
-        text: messageText,
-      });
-      setMessageText("");
+    socketRef.current.send(
+      JSON.stringify({
+        message: messageText,
+        sender: currentUserId,
+      })
+    );
 
-      // Refresh messages after sending
-      const res = await api.get(`/messages/?user=${otherUserId}`);
-      setMessages(res.data);
-    } catch (err) {
-      console.error("Error sending message:", err);
-    }
+    setMessageText("");
   };
 
   if (loading) return <p className="text-center mt-10">Loading messages...</p>;
 
   return (
     <div className="flex flex-col h-full">
-      {/* Messages */}
+
       <div className="flex-1 overflow-y-auto mb-2 p-1">
-        {messages.map((msg) => {
+        {messages.map((msg, index) => {
           const isSender = msg.sender === currentUserId;
           return (
             <div
-              key={msg.id}
+              key={index}
               className={`flex my-1 ${
                 isSender ? "justify-end" : "justify-start"
               }`}
@@ -74,13 +102,7 @@ export default function Chat({ otherUserId, currentUserId }) {
                     : "bg-gray-700 text-white rounded-bl-none"
                 }`}
               >
-                <div>{msg.text}</div>
-                <div className="text-[10px] mt-1 text-gray-500 text-right">
-                  {new Date(msg.timestamp).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
+                <div>{msg.message}</div>
               </div>
             </div>
           );
@@ -88,7 +110,7 @@ export default function Chat({ otherUserId, currentUserId }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
+
       <div className="flex gap-2 mt-2">
         <input
           type="text"

@@ -8,6 +8,8 @@ import EditProfile from "./Components/EditProfile";
 import CreatePost from "./Components/CreatePost";
 import Chatbox from './Components/Chatbox'
 import AnotherUserProfile from "./Components/AnotherUserProfile"
+import Notification from "./Components/Notification";
+import Search from "./Components/Search";
 
 
 function Layout({ currentUser, onLogout }) {
@@ -45,10 +47,10 @@ export default function App() {
           }
         >
           <Route path="/feed" element={<Feed />} />
-          <Route path="/search" element={<div className="p-6">Search Page</div>} />
+          <Route path="/search" element={<Search/>} />
           <Route path="/post" element={<CreatePost/>} />
           <Route path="/message" element={<Chatbox/>} />
-          <Route path="/notifications" element={<div className="p-6">Notifications</div>} />
+          <Route path="/notifications" element={<Notification/>} />
           <Route path="/profile/:username" element={<Profile/>} />
           <Route path="/user/:userId" element={<AnotherUserProfile />} />
           <Route path="/edit-profile" element={<EditProfile />} />

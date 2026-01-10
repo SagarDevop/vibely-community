@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import api from "../api";
-import CommentsSection from "./CommentsSection"; // we’ll use this from before
+import CommentsSection from "./CommentsSection";
+import { useNavigate } from "react-router-dom";
 
 export default function PostCard({ post }) {
   const initialLikeCount = post.like_count ?? post.likes ?? 0;
@@ -9,95 +10,101 @@ export default function PostCard({ post }) {
   const [liked, setLiked] = useState(initialLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [loading, setLoading] = useState(false);
-  const [showComments, setShowComments] = useState(false); // 🔹 NEW
+  const [showComments, setShowComments] = useState(false);
+  const navigate = useNavigate();
+  const onSelectUser = (user) => {
+    navigate(`/user/${user}`);
+  };
 
   const toggleLike = async () => {
     const newLiked = !liked;
-    const prevCount = likeCount;
     setLiked(newLiked);
-    setLikeCount(prevCount + (newLiked ? 1 : -1));
+    setLikeCount(likeCount + (newLiked ? 1 : -1));
 
     try {
       setLoading(true);
       const res = await api.post(`/posts/${post.id}/like/`);
-      if (res?.data?.like_count !== undefined) {
-        setLikeCount(res.data.like_count);
-      }
-      setLiked(Boolean(res?.data?.liked));
+
+      setLikeCount(res.data.like_count);
+      setLiked(Boolean(res.data.liked));
     } catch (err) {
-      console.error("Failed to toggle like:", err);
       setLiked(!newLiked);
-      setLikeCount(prevCount);
+      setLikeCount(likeCount);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-[#474B4F] rounded-xl p-4 shadow-md flex flex-col gap-2">
+    <div className="bg-[#2E2E2E] rounded-xl overflow-hidden shadow-lg">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div
+          onClick={() => onSelectUser(post.user)}
+          className="flex items-center gap-3"
+        >
           {post.avatar ? (
             <img
               src={post.avatar}
-              alt={`${post.username}'s avatar`}
-              className="w-10 h-10 rounded-full object-cover border border-gray-600"
+              alt={post.username}
+              className="w-11 h-11 rounded-full object-cover border border-gray-600"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-[#6B6E70] flex items-center justify-center text-white font-semibold">
+            <div className="w-11 h-11 rounded-full bg-gray-600 flex items-center justify-center text-white">
               {post.username ? post.username[0].toUpperCase() : "?"}
             </div>
           )}
-          <h2 className="font-bold text-lg">{post.username || "Anonymous"}</h2>
-        </div>
 
-        <span className="text-sm text-gray-300">
-          {new Date(post.created_at).toLocaleString()}
-        </span>
+          <div>
+            <h2 className="font-semibold text-white text-lg">
+              {post.username}
+            </h2>
+            <p className="text-xs text-gray-400">
+              {new Date(post.created_at).toLocaleString()}
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Post image */}
+      {/* Post Image */}
       {post.image && (
         <img
           src={post.image}
           alt="post"
-          className="rounded-lg mt-2 max-h-96 object-cover"
+          className="w-full max-h-[500px] object-cover"
         />
       )}
 
       {/* Caption */}
-      {post.caption && <p className="mt-2">{post.caption}</p>}
+      {post.caption && (
+        <div className="px-4 py-3 text-gray-200">{post.caption}</div>
+      )}
 
       {/* Actions */}
-      <div className="flex items-center gap-3 mt-2">
-        {/* ❤️ Like */}
+      <div className="flex items-center gap-6 px-4 py-2 border-t border-gray-700">
         <button
           onClick={toggleLike}
           disabled={loading}
-          className={`flex items-center gap-2 px-3 py-1 rounded-full transition font-semibold
-            ${liked ? "text-red-500" : "text-gray-200 hover:text-red-400"}`}
+          className={`flex items-center gap-2 transition ${
+            liked ? "text-red-500" : "text-gray-300 hover:text-white"
+          }`}
         >
-          <span className="text-lg">{liked ? "❤️" : "🤍"}</span>
+          <span className="text-xl">{liked ? "❤️" : "🤍"}</span>
           <span>{likeCount}</span>
         </button>
 
-        {/* 💬 Comment */}
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-2 px-3 py-1 text-gray-200 hover:text-blue-400"
+          className="flex items-center gap-2 text-gray-300 hover:text-blue-400 transition"
         >
           💬 <span>{post.comment_count ?? 0}</span>
         </button>
       </div>
 
-      {/* Comments Section */}
+      {/* Comments */}
       {showComments && (
-        <div className="mt-3 border-t border-gray-600 pt-3">
-          <CommentsSection
-            postId={post.id}
-            currentUser={post.username}
-          />
+        <div className="p-4 border-t border-gray-700">
+          <CommentsSection postId={post.id} />
         </div>
       )}
     </div>

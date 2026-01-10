@@ -1,0 +1,89 @@
+{selectedPost && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-md w-80 shadow-lg">
+            <div className="flex justify-between">
+              <h2 className="font-semibold mb-2 text-black">Post</h2>
+              <p
+                onClick={() => setOpenMenu(!openmenu)}
+                className="text-black cursor-pointer"
+              >
+                <HiDotsVertical />
+              </p>
+              {openmenu && (
+                <div className="absolute bg-white border mt-8 p-2 rounded shadow w-32 right-[38vw]">
+                  <p
+                    className="text-red-600 cursor-pointer"
+                    onClick={() => {
+                      handleDeletePost(selectedPost.id);
+                    }}
+                  >
+                    Delete
+                  </p>
+                  <p
+                    className="text-black cursor-pointer"
+                    onClick={() => {
+                      setEditCaption(selectedPost.caption);
+                      setIsEditing(true);
+                      setOpenMenu(false);
+                    }}
+                  >
+                    Edit
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <img
+              src={selectedPost.image}
+              alt={selectedPost.caption}
+              className="w-full h-auto object-cover rounded"
+            />
+
+            <div className="mt-2 flex justify-between items-center">
+              {isEditing ? (
+                <input
+                  autoFocus
+                  value={editCaption}
+                  onChange={(e) => setEditCaption(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleEditPost(selectedPost.id, { caption: editCaption });
+                      setIsEditing(false);
+                    }
+                  }}
+                  className="w-[10vw] text-black outline-none bg-white py-1"
+                />
+              ) : (
+                <p
+                  className="cursor-text text-black"
+                  onClick={() => {
+                    setEditCaption(selectedPost.caption);
+                    setIsEditing(true);
+                  }}
+                >
+                  {selectedPost.caption}
+                </p>
+              )}
+
+              {isEditing && (
+                <button
+                  onClick={() => {
+                    handleEditPost(selectedPost.id, { caption: editCaption });
+                    setIsEditing(false);
+                  }}
+                  className="bg-black text-white py-1 px-3 rounded"
+                >
+                  Save
+                </button>
+              )}
+            </div>
+
+            <button
+              className="mt-4 w-full bg-gray-800 text-white py-2 rounded"
+              onClick={() => setSelectedPost(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}

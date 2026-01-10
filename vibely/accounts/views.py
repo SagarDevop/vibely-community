@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions
-from .models import User, Post, Message, Like, Comment, Follow
+from .models import User, Post, Message, Like, Comment, Follow, Notification
 from django.db.models import Q
-from .serializers import UserSerializer, ProfileSerializer, PostSerializer, MessageSerializer, RecentChatUserSerializer, CommentSerializer
+from .serializers import UserSerializer,NotificationSerializer, ProfileSerializer, PostSerializer, MessageSerializer, RecentChatUserSerializer, CommentSerializer
 from rest_framework import generics
 from django.shortcuts import get_object_or_404
 
@@ -10,6 +10,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 # Create your views here.
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -49,7 +52,18 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-        
+
+    def perform_destroy(self, instance):
+        if instance.user != self.request.user:
+            raise PermissionDenied("You cannot delete this post.")
+        instance.delete()
+    
+    def perform_update(self, serializer):
+        instance = self.get_object()
+        if instance.user != self.request.user:
+            raise PermissionDenied("You cannot update this post.")
+        serializer.save()
+
 
 class MyPostsView(generics.ListAPIView):
     serializer_class = PostSerializer
@@ -57,6 +71,7 @@ class MyPostsView(generics.ListAPIView):
 
     def get_queryset(self):
         return Post.objects.filter(user=self.request.user).order_by('-created_at')
+
     
 class UserProfilePostsView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -73,6 +88,21 @@ class UserProfilePostsView(generics.RetrieveAPIView):
         **profile_serializer.data
     },
     "posts": posts_serializer.data
+})
+        
+
+class UserProfileView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, username):
+        user = get_object_or_404(User, username = username)
+        profile_serializer = ProfileSerializer(user.profile, context={'request': request})
+
+        return Response({
+    "profile": {
+        "id": user.id,  
+        **profile_serializer.data
+    }
 })
 
 
@@ -107,7 +137,7 @@ class RecentChatsView(APIView):
                 other_user_ids.append(other.id)
 
         users = User.objects.filter(id__in=other_user_ids)
-        serializer = RecentChatUserSerializer(users, many=True)
+        serializer = RecentChatUserSerializer(users, many=True, context={'request': request})
         return Response(serializer.data)
     
 
@@ -199,3 +229,37 @@ class FollowingListView(APIView):
             for f in following
         ]
         return Response(data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_notifications(request):
+    notifs = request.user.notifications.order_by("-created_at")
+    serializer = NotificationSerializer(notifs, many=True)
+    return Response(serializer.data)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def mark_read(request, id):
+    notif = Notification.objects.get(id=id, recipient=request.user,)
+    notif.is_read = True
+    notif.save()
+    return Response({"status": "read"})
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def unread_notification_count(request):
+    count = Notification.objects.filter(
+        recipient=request.user,
+        is_read=False
+    ).count()
+    return Response({"unread_count": count})
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def mark_all_read(request):
+    Notification.objects.filter(
+        recipient=request.user,
+        is_read=False
+    ).update(is_read=True)
+
+    return Response({"status": "all read"})

@@ -1,13 +1,21 @@
 from rest_framework import serializers
-from .models import User, Profile, Post, Message, Comment
+from .models import User, Profile, Post, Message, Comment, Notification
 from django.contrib.auth.hashers import make_password
 
 class ProfileSerializer(serializers.ModelSerializer):
+    is_following = serializers.SerializerMethodField()
     username = serializers.CharField(source='user.username', read_only=True)
     class Meta:
         model = Profile
-        fields = ['username', 'name','avatar', 'bio', 'website', 'is_private', 'created_at', 'followers_count', 'following_count']
+        fields = ['username', 'name','avatar', 'bio', 'website', 'is_private', 'created_at', 'followers_count', 'following_count', 'is_following']
+    def get_is_following(self, obj):
+        request = self.context.get("request")
+        if not request or request.user.is_anonymous:
+            return False
         
+        # obj.user = actual User object behind profile
+        return obj.user.followers_set.filter(follower=request.user).exists()
+
     
 class PostSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
@@ -54,9 +62,10 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class RecentChatUserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(read_only=True)
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'profile']
     
     
     
@@ -67,9 +76,72 @@ class RecursiveField(serializers.Serializer):
         return serializer.data
 
 class CommentSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)
+    user = serializers.StringRelatedField()
+    user_avatar = serializers.SerializerMethodField()
     replies = RecursiveField(many=True, read_only=True)
 
     class Meta:
         model = Comment
-        fields = ["id", "user", "text", "parent", "replies", "created_at"]
+        fields = [
+            "id",
+            "user",
+            "user_avatar",
+            "text",
+            "parent",
+            "replies",
+            "created_at",
+        ]
+
+    def get_user_avatar(self, obj):
+        profile = getattr(obj.user, "profile", None)
+        if profile and profile.avatar:
+            return profile.avatar.url
+        return None
+
+
+from rest_framework import serializers
+
+class NotificationSerializer(serializers.ModelSerializer):
+    actor_username = serializers.CharField(source="actor.username", read_only=True)
+    actor_avatar = serializers.ImageField(source="actor.profile.avatar", read_only=True)
+
+    post_id = serializers.SerializerMethodField()
+    post_image = serializers.SerializerMethodField()
+    comment_text = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "type",
+            "actor_username",
+            "actor_avatar",
+            "actor_id",
+            "post_id",
+            "post_image",
+            "comment_text",
+            "is_read",
+            "created_at",
+        ]
+
+    def get_post_id(self, obj):
+        if isinstance(obj.target, Post):
+            return obj.target.id
+        if isinstance(obj.target, Comment):
+            return obj.target.post.id
+        return None
+
+    def get_post_image(self, obj):
+        if isinstance(obj.target, Post):
+            return obj.target.image.url if obj.target.image else None
+        if isinstance(obj.target, Comment):
+            post = obj.target.post
+            return post.image.url if post.image else None
+        return None
+
+    def get_comment_text(self, obj):
+        if isinstance(obj.target, Comment):
+            return obj.target.text
+        return None
+
+

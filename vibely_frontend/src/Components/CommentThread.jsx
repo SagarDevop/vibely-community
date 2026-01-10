@@ -17,14 +17,39 @@ export default function CommentThread({ comment, postId, onReplyAdded, currentUs
     onReplyAdded(); // reload comments in parent
   };
 
+  const timeAgo = (createdAt) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+
+    const diffMs = now - created;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 24) {
+      return `${diffHours}h`;
+    } else {
+      return `${diffDays}d`;
+    }
+  };
+
   return (
     <div className="mb-3 ml-2">
-      <div className="bg-gray-700 p-2 rounded text-white">
-        <p className="font-semibold">{comment.user?.username}</p>
-        <p>{comment.text}</p>
+      <div className="text-white">
+         <div className="flex gap-3 items-center">
+          <img
+                      className="h-9 rounded-full"
+                      src={comment.user_avatar || "/default-avatar.png"}
+                      alt=""
+                    />
+        <p className="font-semibold">{comment.user}</p>
+        <span className="text-gray-400 text-xs">
+                          {timeAgo(comment.created_at)}
+                        </span>
+         </div>
+        <p className="mt-1 ml-10">{comment.text}</p>
         <button
           onClick={() => setShowReplyBox(!showReplyBox)}
-          className="text-sm text-blue-400 mt-1"
+          className="text-gray-400 text-xs w-8 ml-44"
         >
           {showReplyBox ? "Cancel" : "Reply"}
         </button>

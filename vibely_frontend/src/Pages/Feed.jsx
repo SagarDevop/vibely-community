@@ -5,6 +5,7 @@ import PostCard from "../Components/PostCard";
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
+  const [log, setLog] = useState();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,6 +20,8 @@ export default function Feed() {
         ]);
         setPosts(postsRes.data);
         setUsers(usersRes.data);
+        const log = await api.get("/me/");
+        setLog(log.data.id);
       } catch (err) {
         console.error(err);
         setError("Failed to load feed. Please log in again.");
@@ -63,22 +66,22 @@ export default function Feed() {
         <div className="bg-[#222629] border border-[#474B4F] rounded-xl p-4">
           <h3 className="font-bold text-lg mb-4">People You May Know</h3>
           <ul className="space-y-3">
-            {users.map((user) => (
-              <li
-                key={user.id}
-                className="flex items-center justify-between p-2 rounded-md hover:bg-[#474B4F] transition-colors cursor-pointer"
-                onClick={() => navigate(`/user/${user.id}`)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#6B6E70] flex items-center justify-center text-white font-semibold">
-                    {user.username[0].toUpperCase()}
+            {users
+              .filter((user) => user.id !== log)
+              .map((user) => (
+                <li
+                  key={user.id}
+                  className="flex items-center justify-between p-2 rounded-md hover:bg-[#474B4F] transition-colors cursor-pointer"
+                  onClick={() => navigate(`/user/${user.id}`)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#6B6E70] flex items-center justify-center text-white font-semibold">
+                      {user.username[0].toUpperCase()}
+                    </div>
+                    <span>{user.username}</span>
                   </div>
-                  <span>{user.username}</span>
-                </div>
-
-                
-              </li>
-            ))}
+                </li>
+              ))}
           </ul>
         </div>
       </div>
