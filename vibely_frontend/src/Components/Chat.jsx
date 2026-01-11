@@ -5,14 +5,17 @@ export default function Chat({ otherUserId, currentUserId }) {
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
-  const messagesEndRef = useRef(null);
+
   const socketRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Fetch messages from API
+  /* ===============================
+     FETCH OLD MESSAGES (REST)
+     =============================== */
   useEffect(() => {
     if (!otherUserId) return;
 
@@ -37,7 +40,9 @@ export default function Chat({ otherUserId, currentUserId }) {
     fetchMessages();
   }, [otherUserId]);
 
-  // Setup WebSocket
+  /* ===============================
+     WEBSOCKET CONNECTION
+     =============================== */
   useEffect(() => {
     if (!otherUserId || !currentUserId) return;
 
@@ -46,44 +51,54 @@ export default function Chat({ otherUserId, currentUserId }) {
         ? `${currentUserId}_${otherUserId}`
         : `${otherUserId}_${currentUserId}`;
 
-    // Determine correct WebSocket URL depending on environment
-    const wsScheme =
-      window.location.protocol === "https:" ? "wss" : "ws";
-    const wsHost = window.location.host; // works both locally and prod
-    const wsUrl = `${wsScheme}://${wsHost}/ws/chat/${roomName}/`;
+    // IMPORTANT: explicit URLs (no guessing)
+    const wsUrl = import.meta.env.DEV
+      ? `ws://127.0.0.1:8000/ws/chat/${roomName}/`
+      : `wss://vibely-community.onrender.com/ws/chat/${roomName}/`;
 
-    socketRef.current = new WebSocket(wsUrl);
+    const socket = new WebSocket(wsUrl);
+    socketRef.current = socket;
 
-    socketRef.current.onopen = () =>
-      console.log("Connected to chat room:", roomName);
+    socket.onopen = () => {
+      console.log("WebSocket connected:", roomName);
+    };
 
-    socketRef.current.onmessage = (e) => {
+    socket.onmessage = (e) => {
       const data = JSON.parse(e.data);
       setMessages((prev) => [...prev, data]);
     };
 
-    socketRef.current.onerror = (err) => console.error("WebSocket error:", err);
+    socket.onerror = (e) => {
+      console.error("WebSocket error:", e);
+    };
 
-    socketRef.current.onclose = (e) => {
-      console.log("WebSocket closed, trying to reconnect...");
-      setTimeout(() => {
-        // reconnect logic
-        socketRef.current = new WebSocket(wsUrl);
-      }, 3000);
+    socket.onclose = () => {
+      console.log("WebSocket closed");
     };
 
     return () => {
-      socketRef.current?.close();
+      socket.close();
     };
   }, [otherUserId, currentUserId]);
 
-  // Auto scroll to bottom
+  /* ===============================
+     AUTO SCROLL
+     =============================== */
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  /* ===============================
+     SEND MESSAGE
+     =============================== */
   const sendMessage = () => {
-    if (!messageText.trim() || !socketRef.current) return;
+    if (
+      !messageText.trim() ||
+      !socketRef.current ||
+      socketRef.current.readyState !== WebSocket.OPEN
+    ) {
+      return;
+    }
 
     socketRef.current.send(
       JSON.stringify({
@@ -95,17 +110,25 @@ export default function Chat({ otherUserId, currentUserId }) {
     setMessageText("");
   };
 
-  if (loading) return <p className="text-center mt-10">Loading messages...</p>;
+  if (loading) {
+    return <p className="text-center mt-10">Loading messages...</p>;
+  }
 
+  /* ===============================
+     UI
+     =============================== */
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto mb-2 p-1">
         {messages.map((msg, index) => {
           const isSender = msg.sender === currentUserId;
+
           return (
             <div
               key={index}
-              className={`flex my-1 ${isSender ? "justify-end" : "justify-start"}`}
+              className={`flex my-1 ${
+                isSender ? "justify-end" : "justify-start"
+              }`}
             >
               <div
                 className={`p-2 rounded-2xl max-w-[75%] ${
@@ -114,7 +137,7 @@ export default function Chat({ otherUserId, currentUserId }) {
                     : "bg-gray-700 text-white rounded-bl-none"
                 }`}
               >
-                <div>{msg.message}</div>
+                {msg.message}
               </div>
             </div>
           );
@@ -127,9 +150,7 @@ export default function Chat({ otherUserId, currentUserId }) {
           type="text"
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") sendMessage();
-          }}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           placeholder="Type a message..."
           className="flex-1 p-2 rounded border border-gray-600 bg-[#333] text-white"
         />
