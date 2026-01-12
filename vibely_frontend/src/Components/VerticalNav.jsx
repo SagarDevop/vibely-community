@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   HomeIcon,
   MagnifyingGlassIcon,
@@ -10,96 +10,110 @@ import {
 } from "@heroicons/react/24/outline";
 import { Link, useLocation } from "react-router-dom";
 import api from "../api";
-import { useEffect, useState } from "react";
+
 export default function VerticalNav({ currentUser, onLogout }) {
-  const [data, setData] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const location = useLocation();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUnread = async () => {
       try {
         const res = await api.get("notifications/unread-count/");
-        console.log(res.data.unread_count);
-        setData(res.data.unread_count);
+        setUnreadCount(res.data.unread_count || 0);
       } catch (err) {
         console.error(err);
       }
     };
-    fetchData();
-    const intervalId = setInterval(fetchData, 1000);
 
-    return () => clearInterval(intervalId);
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const navItems = [
-    { name: "Home", icon: <HomeIcon className="w-6 h-6" />, path: "/feed" },
-    {
-      name: "Search",
-      icon: <MagnifyingGlassIcon className="w-6 h-6" />,
-      path: "/search",
-    },
-    { name: "Post", icon: <PlusIcon className="w-6 h-6" />, path: "/Post" },
-    {
-      name: "Message",
-      icon: <ChatBubbleLeftRightIcon className="w-6 h-6" />,
-      path: "/message",
-    },
-    {
-      name: "Notifications",
-      icon: (
-        <div className="relative">
-          <BellIcon className="w-6 h-6" />
-          {data > 0 && (
-            <span
-              className="absolute -top-1 -right-1 bg-red-600 text-white text-xs
-                         min-w-[18px] h-[18px] px-1 flex items-center justify-center
-                         rounded-full"
-            >
-              {data}
-            </span>
-          )}
-        </div>
-      ),
-      path: "/notifications",
-    },
+    { name: "Home", icon: HomeIcon, path: "/feed" },
+    { name: "Search", icon: MagnifyingGlassIcon, path: "/search" },
+    { name: "Post", icon: PlusIcon, path: "/Post" },
+    { name: "Message", icon: ChatBubbleLeftRightIcon, path: "/message" },
+    { name: "Notifications", icon: BellIcon, path: "/notifications" },
     {
       name: "Profile",
-      icon: <UserCircleIcon className="w-6 h-6" />,
+      icon: UserCircleIcon,
       path: `/profile/${currentUser?.username}`,
     },
   ];
-  const location = useLocation();
 
   return (
-    <div className="flex flex-col justify-between h-screen w-[15vw] bg-[#222629] text-white p-4 border border-[#6B6E70]/30 sticky top-0">
-      <div className="flex flex-col  gap-6 mt-4">
-        <div className="text-[#86C232] font-bold text-2xl ml-3 mb-6">
-          Vibely
-        </div>
+    <nav
+      className="
+        fixed lg:sticky
+        bottom-0 lg:top-0
+        w-full lg:w-64
+        h-16 lg:h-screen
+        bg-[#222629] text-white
+        border-t lg:border-r border-[#6B6E70]/30
+        z-50
+        flex lg:flex-col
+        justify-evenly
+      "
+    >
+      <div className="hidden lg:block text-[#86C232] font-bold text-2xl px-6 py-6">
+        Vibely
+      </div>
 
+      <div className="flex lg:flex-col justify-around lg:justify-start lg:gap-2 px-2">
         {navItems.map((item) => {
           const active = location.pathname === item.path;
+          const Icon = item.icon;
+
           return (
             <Link
               key={item.name}
               to={item.path}
-              className={`flex gap-3 items-center  w-full p-2 rounded-lg transition-colors
-              ${active ? "bg-[#86C232] text-[#222629]" : "hover:bg-[#474B4F]"}`}
-              title={item.name}
+              className={`
+                flex flex-col lg:flex-row items-center gap-1 lg:gap-3
+                px-3 py-2 rounded-lg transition
+                ${
+                  active
+                    ? "bg-[#86C232] text-[#222629]"
+                    : "hover:bg-[#474B4F]"
+                }
+              `}
             >
-              {item.icon} {item.name}
+              <div className="relative">
+                <Icon className="w-6 h-6" />
+                {item.name === "Notifications" && unreadCount > 0 && (
+                  <span
+                    className="
+                      absolute -top-1 -right-2
+                      bg-red-600 text-white text-xs
+                      min-w-[18px] h-[18px]
+                      flex items-center justify-center
+                      rounded-full
+                    "
+                  >
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+
+              <span className="hidden lg:inline">{item.name}</span>
             </Link>
           );
         })}
       </div>
 
-      {/* Bottom logout */}
       <button
-        className="flex flex-col w-full p-2 rounded-lg hover:bg-[#474B4F] transition-colors mb-4"
         onClick={onLogout}
-        title="Logout"
+        className="
+          flex items-center justify-center lg:justify-start
+          gap-2 px-4 py-3
+          hover:bg-[#474B4F]
+        "
       >
         <ArrowRightOnRectangleIcon className="w-6 h-6" />
+        <span className="hidden lg:inline">Logout</span>
       </button>
-    </div>
+    </nav>
   );
 }

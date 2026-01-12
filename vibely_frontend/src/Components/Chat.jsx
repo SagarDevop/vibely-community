@@ -13,9 +13,6 @@ export default function Chat({ otherUserId, currentUserId }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  /* ===============================
-     FETCH OLD MESSAGES (REST)
-     =============================== */
   useEffect(() => {
     if (!otherUserId) return;
 
@@ -40,9 +37,6 @@ export default function Chat({ otherUserId, currentUserId }) {
     fetchMessages();
   }, [otherUserId]);
 
-  /* ===============================
-     WEBSOCKET CONNECTION
-     =============================== */
   useEffect(() => {
     if (!otherUserId || !currentUserId) return;
 
@@ -51,10 +45,13 @@ export default function Chat({ otherUserId, currentUserId }) {
         ? `${currentUserId}_${otherUserId}`
         : `${otherUserId}_${currentUserId}`;
 
-    // IMPORTANT: explicit URLs (no guessing)
+    const backendHost = import.meta.env.VITE_BACKEND_HOST;
+
     const wsUrl = import.meta.env.DEV
       ? `ws://127.0.0.1:8000/ws/chat/${roomName}/`
-      : `wss://vibely-community.onrender.com/ws/chat/${roomName}/`;
+      : `wss://${backendHost}/ws/chat/${roomName}/`;
+
+    console.log("Connecting WS →", wsUrl);
 
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
@@ -72,8 +69,8 @@ export default function Chat({ otherUserId, currentUserId }) {
       console.error("WebSocket error:", e);
     };
 
-    socket.onclose = () => {
-      console.log("WebSocket closed");
+    socket.onclose = (e) => {
+      console.warn("WebSocket closed:", e.code, e.reason);
     };
 
     return () => {
@@ -81,16 +78,10 @@ export default function Chat({ otherUserId, currentUserId }) {
     };
   }, [otherUserId, currentUserId]);
 
-  /* ===============================
-     AUTO SCROLL
-     =============================== */
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  /* ===============================
-     SEND MESSAGE
-     =============================== */
   const sendMessage = () => {
     if (
       !messageText.trim() ||
@@ -113,10 +104,6 @@ export default function Chat({ otherUserId, currentUserId }) {
   if (loading) {
     return <p className="text-center mt-10">Loading messages...</p>;
   }
-
-  /* ===============================
-     UI
-     =============================== */
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto mb-2 p-1">

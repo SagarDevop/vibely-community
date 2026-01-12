@@ -2,66 +2,72 @@ import React, { useState, useEffect } from "react";
 import Chat from "./Chat";
 import api from "../api";
 import MessageList from "./MessageList";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 export default function Chatbox() {
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [userpro, setUserPro] = useState("");
+  const [userpro, setUserPro] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
-  const [showChat, setShowChat] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fechcurr = async () => {
+    const fetchCurrent = async () => {
       try {
         const res = await api.get("/me/");
         setCurrentUserId(res.data.id);
         setUserPro(res.data.profile);
-      } catch (error) {
-        console.log(error);
+      } catch (err) {
+        console.error(err);
       }
     };
-    fechcurr();
+    fetchCurrent();
   }, []);
-  
+
   const handleSelectUser = (user) => {
     setSelectedUser(user);
-    setShowChat(true);
   };
 
-  const handleCloseChat = () => {
-    setShowChat(false);
+  const handleBack = () => {
     setSelectedUser(null);
   };
 
   return (
-    <>
-      <div className="h-[10vh] bg-[#86C232] w-full sticky top-0 z-20 flex">
-        <div
-          className="flex items-center gap-3 p-2 rounded-md cursor-pointer transition"
-          onClick={() => navigate(`/user/${currentUserId}`)}
-        >
-          <img
-            src={userpro.avatar}
-            alt={userpro.username}
-            className="w-12 h-12 rounded-full object-cover"
-          />
-          <div>
-            <p className="text-gray-900 font-semibold">{userpro.username}</p>
-            <p className="text-sm text-gray-900">{userpro.name}</p>
-          </div>
+    <div className="h-screen flex flex-col bg-[#181a1b]">
+      {!selectedUser && (
+        <div className="flex h-16-  bg-[#86C232] items-center px-4 lg:hidden">
+          <h1 className="text-white text-2xl font-bold">Messages</h1>
         </div>
-      </div>
-      <div className="flex h-[88vh] gap-4">
-        {/* Left: Recent chats */}
-        <div className="w-1/3 border-r border-gray-700 p-2 overflow-y-auto">
+      )}
+
+      <div className="flex flex-1 overflow-hidden">
+        <div
+          className={`
+            w-full lg:w-1/3
+            border-r border-gray-700
+            overflow-y-auto
+            ${selectedUser ? "hidden lg:block" : "block"}
+          `}
+        >
+          
+          <div className="hidden lg:flex items-center h-16 px-4 border-b border-gray-700 bg-[#222629]">
+            <h1 className="text-white text-xl font-semibold">Messages</h1>
+          </div>
+
           <MessageList onSelectUser={handleSelectUser} />
         </div>
 
-        {/* Right: Chat dialog */}
-        <div className="flex-1 p-2 relative">
-          {!showChat && (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+      
+        <div
+          className={`
+            flex-1
+            ${selectedUser ? "block" : "hidden lg:block"}
+          `}
+        >
+          {!selectedUser ? (
+            
+            <div className="hidden lg:flex flex-col items-center justify-center h-full text-gray-400">
               <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mb-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -80,26 +86,32 @@ export default function Chatbox() {
               </div>
               <p className="text-lg font-medium">Start a conversation</p>
               <p className="text-sm text-gray-500 mt-1">
-                Select a user from the left to open a chat.
+                Select a user to begin chatting
               </p>
             </div>
-          )}
-
-          {showChat && selectedUser && (
-            <div className="flex flex-col h-[88vh] border rounded shadow-md">
-              {/* Header */}
-              <div className="flex justify-between items-center p-2 border-b border-gray-700">
-                <span className="font-medium">{selectedUser.username}</span>
+          ) : (
+            <div className="lg:h-full h-[90vh] flex flex-col">
+              
+              <div className="flex items-center gap-3 p-3 border-b border-gray-700 bg-[#222629]">
                 <button
-                  onClick={handleCloseChat}
-                  className="text-red-500 hover:text-red-700"
+                  onClick={handleBack}
+                  className="lg:hidden text-white"
                 >
-                  Close
+                  <ArrowLeftIcon className="w-6 h-6" />
                 </button>
+
+                <img
+                  className="h-9 w-9 rounded-full object-cover"
+                  src={selectedUser.profile?.avatar || "/default-avatar.png"}
+                  alt=""
+                />
+
+                <span className="font-medium text-white">
+                  {selectedUser.username}
+                </span>
               </div>
 
-              {/* Chat messages */}
-              <div className="flex-1 overflow-y-auto p-2">
+              <div className="flex-1 overflow-hidden">
                 <Chat
                   otherUserId={selectedUser.id}
                   currentUserId={currentUserId}
@@ -109,6 +121,6 @@ export default function Chatbox() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

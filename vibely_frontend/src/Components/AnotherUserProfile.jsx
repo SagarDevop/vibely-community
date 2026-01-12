@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../api";
 import Chat from "./Chat";
-
+import PostModal from "./PostModal";
 export default function AnotherUserProfile() {
   const { userId } = useParams();
   const [followerlist, setFollowerList] = useState([]);
@@ -260,126 +260,21 @@ export default function AnotherUserProfile() {
       </div>
       
       {selectedPost && (
-        <div className="fixed inset-0 bg-black/50 w-[100vw] h-[100vh] flex items-center justify-center z-50">
-          <div className="flex h-[90vh] w-[75vw] bg-white rounded-md">
-            <div className="w-[55%] rounded-md">
-              <img
-                className="w-full h-full object-cover rounded-sm"
-                src={selectedPost.image || "/default-post.png"}
-                alt={selectedPost.caption || ""}
-              />
-            </div>
-            <div className="w-[45%] bg-slate-900 rounded-sm">
-              <div className="flex h-12 items-center gap-3 p-4">
-                <img
-                  className="h-9 rounded-full"
-                  src={selectedPost.avatar || "/default-avatar.png"}
-                  alt=""
-                />
-                <p className="text-white font-bold">{selectedPost.username}</p>
-              </div>
-              <div className="flex items-center gap-3 pl-4 pt-5 pb-3">
-                <img
-                  className="h-9 rounded-full"
-                  src={selectedPost.avatar || "/default-avatar.png"}
-                  alt=""
-                />
-                <p className="text-white font-bold">{selectedPost.username}</p>
-                <p className="text-white">{selectedPost.caption}</p>
-              </div>
-              <div className="m-4 h-[58.5vh] overflow-y-auto">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="pb-7">
-                    <div className="flex items-center gap-3">
-                      <img
-                        className="h-9 rounded-full"
-                        src={comment.user_avatar || "/default-avatar.png"}
-                        alt=""
-                      />
-                      <p className="text-white font-bold">{comment.user}</p>
-                      <span className="text-gray-400 text-xs">
-                        {timeAgo(comment.created_at)}
-                      </span>
-                    </div>
-                    <div className="flex flex-col ml-12">
-                      <p className="text-white">{comment.text}</p>
-                      <button
-                        onClick={() =>
-                          setReplyingTo(
-                            replyingTo === comment.id ? null : comment.id
-                          )
-                        }
-                        className="text-gray-400 text-xs w-8"
-                      >
-                        {replyingTo === comment.id ? "Cancel" : "Reply"}
-                      </button>
-
-                      {replyingTo === comment.id && (
-                        <form
-                          onSubmit={handleReplySubmit}
-                          className="mt-2 ml-4 flex gap-2"
-                        >
-                          <input
-                            value={replyText}
-                            onChange={(e) => setReplyText(e.target.value)}
-                            placeholder="Write a reply..."
-                            className="flex-1 bg-gray-800 text-white p-2 rounded"
-                          />
-                          <button
-                            type="submit"
-                            className="bg-blue-600 text-white px-3 rounded"
-                          >
-                            Reply
-                          </button>
-                        </form>
-                      )}
-                      <div className="ml-5 mt-2 border-l border-gray-600 pl-2">
-                        {comment.replies?.map((reply) => (
-                          <div key={reply.id} className="">
-                            <div className="ml-1 mt-2 flex gap-3 items-center ">
-                              <img
-                                className="h-9 rounded-full"
-                                src={reply.user_avatar || "/default-avatar.png"}
-                                alt=""
-                              />
-                              <p className="font-bold">{reply.user}</p>
-                              <span className="text-gray-400 text-xs">
-                                {timeAgo(reply.created_at)}
-                              </span>
-                            </div>
-                            <p className="ml-[4vw] text-white">{reply.text}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex h-10 items-center justify-center gap-3">
-                <form onSubmit={handleSubmit} className="flex ">
-                  <input
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="flex-1 bg-gray-800 text-white p-2 w-[29.7vw]
-           border-none outline-none focus:outline-none focus:ring-0 focus:shadow-none"
-                  />
-                  <button type="submit" className="bg-gray-800 text-white px-3">
-                    Post
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-          <button
-            className="bottom-[43vh] left-24 relative text-red-600 font-bold text-2xl"
-            onClick={() => setSelectedPost(null)}
-          >
-            ✕
-          </button>
-        </div>
-      )}
+         <PostModal
+         post={selectedPost}
+         comments={comments}
+         text={text}
+         setText={setText}
+         replyingTo={replyingTo}
+         setReplyingTo={setReplyingTo}
+         replyText={replyText}
+         setReplyText={setReplyText}
+         timeAgo={timeAgo}
+         onClose={() => setSelectedPost(null)}
+         onSubmitComment={handleSubmit}
+         onSubmitReply={handleReplySubmit}
+       />       
+         )}
 
       {/* Chat Modal */}
       {openChat && (
