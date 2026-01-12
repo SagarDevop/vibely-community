@@ -49,7 +49,7 @@ export default function Chat({ otherUserId, currentUserId }) {
 
     const wsUrl = import.meta.env.DEV
       ? `ws://127.0.0.1:8000/ws/chat/${roomName}/`
-      : `wss://${backendHost}/ws/chat/${roomName}/`;
+      : `wss://https://vibely-backend.onrender.com/ws/chat/${roomName}/`;
 
     console.log("Connecting WS →", wsUrl);
 
