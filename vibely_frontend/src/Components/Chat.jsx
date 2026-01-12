@@ -45,7 +45,7 @@ export default function Chat({ otherUserId, currentUserId }) {
         ? `${currentUserId}_${otherUserId}`
         : `${otherUserId}_${currentUserId}`;
 
-    const backendHost = "https://vibely-backend.onrender.com"
+    const backendHost = "vibely-backend.onrender.com"
 
     const wsUrl = import.meta.env.DEV
       ? `ws://127.0.0.1:8000/ws/chat/${roomName}/`
