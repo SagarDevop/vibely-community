@@ -1,22 +1,22 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from django.contrib.auth import get_user_model
 from .models import Message
 
-User = get_user_model()
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
 
+        # ACCEPT FIRST (important)
+        await self.accept()
+
+        # THEN add to group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
-
-        await self.accept()
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
@@ -26,11 +26,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        message_text = data["message"]
-        sender_id = data["sender"]
+
+        message_text = data.get("message")
+        sender_id = data.get("sender")
 
         user1_id, user2_id = self.room_name.split("_")
-
         receiver_id = user2_id if str(sender_id) == user1_id else user1_id
 
         message = await self.save_message(
