@@ -31,10 +31,12 @@ SECRET_KEY = 'django-insecure-s_4wknvihfr1o5#y@b9qyij^w15qn434cryg#+vk@ct%1oa#8-
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    "vibely-backend.onrender.com",
     "vibely-community.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
+
 
 
 
@@ -88,14 +90,23 @@ TEMPLATES = [
 WSGI_APPLICATION = 'vibely.wsgi.application'
 ASGI_APPLICATION = "vibely.asgi.application"
 
+REDIS_URL = os.environ.get("REDIS_URL")
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [os.environ.get("REDIS_URL")],
+            "hosts": [
+                {
+                    "address": REDIS_URL,
+                    "ssl": True,
+                    "ssl_cert_reqs": None,
+                }
+            ],
         },
     },
 }
+
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
