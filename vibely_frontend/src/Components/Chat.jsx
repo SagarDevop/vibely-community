@@ -5,14 +5,18 @@ export default function Chat({ otherUserId, currentUserId }) {
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
 
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
+  /* ---------------- SCROLL ---------------- */
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  /* ---------------- FETCH OLD MESSAGES ---------------- */
   useEffect(() => {
     if (!otherUserId) return;
 
@@ -37,6 +41,7 @@ export default function Chat({ otherUserId, currentUserId }) {
     fetchMessages();
   }, [otherUserId]);
 
+  /* ---------------- WEBSOCKET ---------------- */
   useEffect(() => {
     if (!otherUserId || !currentUserId) return;
 
@@ -45,32 +50,48 @@ export default function Chat({ otherUserId, currentUserId }) {
         ? `${currentUserId}_${otherUserId}`
         : `${otherUserId}_${currentUserId}`;
 
-    const backendHost = "vibely-backend.onrender.com"
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${protocol}://${window.location.host}/ws/chat/${roomName}/`;
 
-    const wsUrl = import.meta.env.DEV
-      ? `ws://127.0.0.1:8000/ws/chat/${roomName}/`
-      : `wss://${backendHost}/ws/chat/${roomName}/`;
-
-    console.log("Connecting WS →", wsUrl);
+    console.log("WS connecting →", wsUrl);
 
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log("WebSocket connected:", roomName);
+      console.log("WS connected:", roomName);
     };
 
     socket.onmessage = (e) => {
       const data = JSON.parse(e.data);
-      setMessages((prev) => [...prev, data]);
+
+      // typing event
+      if (data.type === "typing") {
+        setIsTyping(true);
+
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+
+        typingTimeoutRef.current = setTimeout(() => {
+          setIsTyping(false);
+        }, 1000);
+
+        return;
+      }
+
+      // message event
+      if (data.message) {
+        setMessages((prev) => [...prev, data]);
+      }
     };
 
     socket.onerror = (e) => {
-      console.error("WebSocket error:", e);
+      console.error("WS error:", e);
     };
 
     socket.onclose = (e) => {
-      console.warn("WebSocket closed:", e.code, e.reason);
+      console.warn("WS closed:", e.code, e.reason);
     };
 
     return () => {
@@ -78,10 +99,12 @@ export default function Chat({ otherUserId, currentUserId }) {
     };
   }, [otherUserId, currentUserId]);
 
+  /* ---------------- AUTO SCROLL ---------------- */
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]);
 
+  /* ---------------- SEND MESSAGE ---------------- */
   const sendMessage = () => {
     if (
       !messageText.trim() ||
@@ -101,24 +124,37 @@ export default function Chat({ otherUserId, currentUserId }) {
     setMessageText("");
   };
 
+  /* ---------------- SEND TYPING ---------------- */
+  const sendTyping = () => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(
+        JSON.stringify({
+          type: "typing",
+          sender: currentUserId,
+        })
+      );
+    }
+  };
+
+  /* ---------------- UI ---------------- */
   if (loading) {
-    return <p className="text-center mt-10">Loading messages...</p>;
+    return <p className="text-center mt-10 text-gray-400">Loading messages...</p>;
   }
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto mb-2 p-1">
+      {/* messages */}
+      <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {messages.map((msg, index) => {
           const isSender = msg.sender === currentUserId;
 
           return (
             <div
               key={index}
-              className={`flex my-1 ${
-                isSender ? "justify-end" : "justify-start"
-              }`}
+              className={`flex ${isSender ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`p-2 rounded-2xl max-w-[75%] ${
+                className={`px-3 py-2 rounded-2xl max-w-[75%] text-sm ${
                   isSender
                     ? "bg-white text-black rounded-br-none"
                     : "bg-gray-700 text-white rounded-bl-none"
@@ -129,21 +165,30 @@ export default function Chat({ otherUserId, currentUserId }) {
             </div>
           );
         })}
+
+        {isTyping && (
+          <p className="text-xs text-gray-400 ml-2">Typing...</p>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex gap-2 mt-2">
+      {/* input */}
+      <div className="flex gap-2 p-2 border-t border-gray-700">
         <input
           type="text"
           value={messageText}
-          onChange={(e) => setMessageText(e.target.value)}
+          onChange={(e) => {
+            setMessageText(e.target.value);
+            sendTyping();
+          }}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           placeholder="Type a message..."
-          className="flex-1 p-2 rounded border border-gray-600 bg-[#333] text-white"
+          className="flex-1 p-2 rounded bg-[#333] text-white outline-none"
         />
         <button
           onClick={sendMessage}
-          className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded text-white"
+          className="bg-green-500 hover:bg-green-600 px-4 rounded text-white"
         >
           Send
         </button>
