@@ -32,10 +32,19 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "vibely-backend.onrender.com",
-    "vibely-community.onrender.com",
+    "vibely-community.vercel.app",
     "localhost",
     "127.0.0.1",
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://vibely-community.vercel.app",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://vibely-community.vercel.app",
+]
+
 
 
 

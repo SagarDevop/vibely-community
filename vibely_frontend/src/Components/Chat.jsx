@@ -50,10 +50,15 @@ export default function Chat({ otherUserId, currentUserId }) {
         ? `${currentUserId}_${otherUserId}`
         : `${otherUserId}_${currentUserId}`;
 
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const wsUrl = `${protocol}://${window.location.host}/ws/chat/${roomName}/`;
-
-    console.log("WS connecting →", wsUrl);
+        const wsBase =
+        import.meta.env.DEV
+          ? "ws://127.0.0.1:8000"
+          : "wss://vibely-backend.onrender.com";
+      
+      const wsUrl = `${wsBase}/ws/chat/${roomName}/`;
+      
+      console.log("WS connecting →", wsUrl);
+    
 
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
