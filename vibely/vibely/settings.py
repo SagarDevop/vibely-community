@@ -31,11 +31,12 @@ SECRET_KEY = 'django-insecure-s_4wknvihfr1o5#y@b9qyij^w15qn434cryg#+vk@ct%1oa#8-
 DEBUG = True
 
 ALLOWED_HOSTS = [
+    "vibely-community.onrender.com",
     "vibely-backend.onrender.com",
-    "vibely-community.vercel.app",
     "localhost",
     "127.0.0.1",
 ]
+
 
 CORS_ALLOWED_ORIGINS = [
     "https://vibely-community.vercel.app",
