@@ -31,8 +31,8 @@ SECRET_KEY = 'django-insecure-s_4wknvihfr1o5#y@b9qyij^w15qn434cryg#+vk@ct%1oa#8-
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "vibely-community.onrender.com",
-    "vibely-backend.onrender.com",
+    "https://vibely-community.onrender.com",
+    "https://vibely-community.onrender.com",
     "localhost",
     "127.0.0.1",
 ]
