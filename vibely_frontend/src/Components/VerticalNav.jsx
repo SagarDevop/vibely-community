@@ -26,7 +26,7 @@ export default function VerticalNav({ currentUser, onLogout }) {
     };
 
     fetchUnread();
-    const interval = setInterval(fetchUnread, 1000);
+    const interval = setInterval(fetchUnread, 10000);
     return () => clearInterval(interval);
   }, []);
 
