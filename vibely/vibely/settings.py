@@ -30,12 +30,8 @@ SECRET_KEY = 'django-insecure-s_4wknvihfr1o5#y@b9qyij^w15qn434cryg#+vk@ct%1oa#8-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    "vibely-backend.onrender.com",
-    "vibely-community.onrender.com",
-    "localhost",
-    "127.0.0.1",
-]
+ALLOWED_HOSTS = ['*']
+
 
 
 
@@ -132,11 +128,13 @@ import dj_database_url
 
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.parse(
+        os.environ.get("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
+
 
 
 
