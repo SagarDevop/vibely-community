@@ -1,10 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from django.contrib.auth import get_user_model
 from .models import Message
-
-User = get_user_model()
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -26,11 +23,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        message_text = data["message"]
-        sender_id = data["sender"]
+
+        if data.get("type") == "typing":
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "typing",
+                    "sender": data.get("sender"),
+                }
+            )
+            return
+
+        message_text = data.get("message")
+        sender_id = data.get("sender")
+
+        if not message_text or not sender_id:
+            return
 
         user1_id, user2_id = self.room_name.split("_")
-
         receiver_id = user2_id if str(sender_id) == user1_id else user1_id
 
         message = await self.save_message(
@@ -53,6 +63,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps(event))
+
+    async def typing(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "typing",
+            "sender": event["sender"],
+        }))
 
     @database_sync_to_async
     def save_message(self, sender_id, receiver_id, text):
