@@ -29,7 +29,7 @@ export default function Chat({ otherUserId, currentUserId }) {
             sender: msg.sender,
             message: msg.text,
             timestamp: msg.timestamp,
-          }))
+          })),
         );
       } catch (err) {
         console.error("Error fetching messages:", err);
@@ -50,15 +50,13 @@ export default function Chat({ otherUserId, currentUserId }) {
         ? `${currentUserId}_${otherUserId}`
         : `${otherUserId}_${currentUserId}`;
 
-        const wsBase =
-        import.meta.env.DEV
-          ? "ws://127.0.0.1:8000"
-          : "wss://vibely-backend.onrender.com";
-      
-      const wsUrl = `${wsBase}/ws/chat/${roomName}/`;
-      
-      console.log("WS connecting →", wsUrl);
-    
+    const wsBase = import.meta.env.DEV
+      ? "ws://127.0.0.1:8000"
+      : "wss://vibely-community.onrender.com";
+
+    const wsUrl = `${wsBase}/ws/chat/${roomName}/`;
+
+    console.log("WS connecting →", wsUrl);
 
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
@@ -123,7 +121,7 @@ export default function Chat({ otherUserId, currentUserId }) {
       JSON.stringify({
         message: messageText,
         sender: currentUserId,
-      })
+      }),
     );
 
     setMessageText("");
@@ -136,14 +134,16 @@ export default function Chat({ otherUserId, currentUserId }) {
         JSON.stringify({
           type: "typing",
           sender: currentUserId,
-        })
+        }),
       );
     }
   };
 
   /* ---------------- UI ---------------- */
   if (loading) {
-    return <p className="text-center mt-10 text-gray-400">Loading messages...</p>;
+    return (
+      <p className="text-center mt-10 text-gray-400">Loading messages...</p>
+    );
   }
 
   return (
@@ -171,9 +171,7 @@ export default function Chat({ otherUserId, currentUserId }) {
           );
         })}
 
-        {isTyping && (
-          <p className="text-xs text-gray-400 ml-2">Typing...</p>
-        )}
+        {isTyping && <p className="text-xs text-gray-400 ml-2">Typing...</p>}
 
         <div ref={messagesEndRef} />
       </div>
