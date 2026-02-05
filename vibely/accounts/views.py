@@ -212,11 +212,11 @@ class FollowersListView(APIView):
                 "id": f.follower.id,
                 "username": f.follower.username,
                 "name": f.follower.profile.name,
-                "avatar": (
-                    str(f.follower.profile.avatar)
+                    "avatar": (
+                    "https://res.cloudinary.com/dheyj35ys/image/upload/v1/" + f.follower.profile.avatar
                     if f.follower.profile.avatar
                     else None
-                )
+                )   
             }
             for f in followers
         ]
@@ -237,7 +237,7 @@ class FollowingListView(APIView):
                 "username": f.following.username,
                 "name": f.following.profile.name,
                 "avatar": (
-                    str(f.following.profile.avatar) 
+                    "https://res.cloudinary.com/dheyj35ys/image/upload/v1/" + f.following.profile.avatar
                     if f.following.profile.avatar
                     else None
                 )
