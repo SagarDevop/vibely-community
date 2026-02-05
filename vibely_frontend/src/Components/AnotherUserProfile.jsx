@@ -84,27 +84,27 @@ export default function AnotherUserProfile() {
 
   if (loading) return <p className="text-center mt-10">Loading...</p>;
 
-  const handleFollowToggle = async () => {
-    try {
-      const res = await api.post(`/profiles/${user.username}/follow/`);
+    const handleFollowToggle = async () => {
+      try {
+        const res = await api.post(`/profiles/${user.username}/follow/`);
 
-      if (res.data.status === "followed") {
-        setUser((prev) => ({
-          ...prev,
-          is_following: true,
-          followers_count: prev.followers_count + 1,
-        }));
-      } else {
-        setUser((prev) => ({
-          ...prev,
-          is_following: false,
-          followers_count: prev.followers_count - 1,
-        }));
+        if (res.data.status === "followed") {
+          setUser((prev) => ({
+            ...prev,
+            is_following: true,
+            followers_count: prev.followers_count + 1,
+          }));
+        } else {
+          setUser((prev) => ({
+            ...prev,
+            is_following: false,
+            followers_count: prev.followers_count - 1,
+          }));
+        }
+      } catch (err) {
+        console.error("Follow error:", err);
       }
-    } catch (err) {
-      console.error("Follow error:", err);
-    }
-  };
+    };
 
   const handleReplySubmit = async (e) => {
     e.preventDefault();

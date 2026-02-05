@@ -203,12 +203,20 @@ class FollowersListView(APIView):
 
     def get(self, request, username):
         user = get_object_or_404(User, username=username)
-        followers = user.followers_set.all().select_related("follower")
+        followers = user.followers_set.select_related(
+            "follower", "follower__profile"
+        )
 
         data = [
             {
                 "id": f.follower.id,
-                "username": f.follower.username
+                "username": f.follower.username,
+                "name": f.follower.profile.name,
+                "profile_picture": (
+                    f.follower.profile.profile_picture.url
+                    if f.follower.profile.profile_picture
+                    else None
+                )
             }
             for f in followers
         ]
@@ -219,16 +227,25 @@ class FollowingListView(APIView):
 
     def get(self, request, username):
         user = get_object_or_404(User, username=username)
-        following = user.following_set.all().select_related("following")
+        following = user.following_set.select_related(
+            "following", "following__profile"
+        )
 
         data = [
             {
                 "id": f.following.id,
-                "username": f.following.username
+                "username": f.following.username,
+                "name": f.following.profile.name,
+                "profile_picture": (
+                    f.following.profile.profile_picture.url
+                    if f.following.profile.profile_picture
+                    else None
+                )
             }
             for f in following
         ]
         return Response(data)
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
