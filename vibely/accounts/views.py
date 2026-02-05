@@ -213,8 +213,8 @@ class FollowersListView(APIView):
                 "username": f.follower.username,
                 "name": f.follower.profile.name,
                 "profile_picture": (
-                    f.follower.profile.profile_picture.url
-                    if f.follower.profile.profile_picture
+                    f.follower.profile.avatar
+                    if f.follower.profile.avatar
                     else None
                 )
             }
@@ -237,8 +237,8 @@ class FollowingListView(APIView):
                 "username": f.following.username,
                 "name": f.following.profile.name,
                 "profile_picture": (
-                    f.following.profile.profile_picture.url
-                    if f.following.profile.profile_picture
+                    f.following.profile.avatar
+                    if f.following.profile.avatar
                     else None
                 )
             }
