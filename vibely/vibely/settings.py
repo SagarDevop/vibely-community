@@ -37,7 +37,6 @@ ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     "https://vibely-community.onrender.com",
-    "https://vibely-backend.onrender.com",
 ]
 
 
