@@ -12,9 +12,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or request.user.is_anonymous:
             return False
-        
-        # obj.user = actual User object behind profile
         return obj.user.followers_set.filter(follower=request.user).exists()
+    def get_avatar(self, obj):
+        if obj.avatar:
+            return obj.avatar.url
+        return None
 
     
 class PostSerializer(serializers.ModelSerializer):

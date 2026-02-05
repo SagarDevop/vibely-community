@@ -212,7 +212,7 @@ class FollowersListView(APIView):
                 "id": f.follower.id,
                 "username": f.follower.username,
                 "name": f.follower.profile.name,
-                "profile_picture": (
+                "avatar": (
                     str(f.follower.profile.avatar)
                     if f.follower.profile.avatar
                     else None
@@ -236,7 +236,7 @@ class FollowingListView(APIView):
                 "id": f.following.id,
                 "username": f.following.username,
                 "name": f.following.profile.name,
-                "profile_picture": (
+                "avatar": (
                     str(f.following.profile.avatar) 
                     if f.following.profile.avatar
                     else None
