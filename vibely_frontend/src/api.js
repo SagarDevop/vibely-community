@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api",
+  baseURL: "https://vibely-community.onrender.com/api",
 });
 
 // Attach access token
@@ -23,7 +23,7 @@ api.interceptors.response.use(
       if (refresh) {
         try {
           const res = await axios.post(
-            "http://127.0.0.1:8000/api/token/refresh/",
+            "https://vibely-community.onrender.com/api/token/refresh/",
             { refresh },
             { headers: { "Content-Type": "application/json" } }
           );
