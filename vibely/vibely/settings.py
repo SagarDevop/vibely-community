@@ -100,16 +100,10 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [
-                {
-                    "address": os.environ["REDIS_URL"],
-                    "ssl": True,
-                }
-            ],
+            "hosts": [os.environ["REDIS_URL"]],
         },
     },
 }
-
 
 
 CLOUDINARY_STORAGE = {
