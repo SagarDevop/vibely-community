@@ -123,22 +123,39 @@ class MessageListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(sender=self.request.user)
         
+from django.db.models import Q
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
 class RecentChatsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        messages = Message.objects.filter(Q(sender=user) | Q(receiver=user)).order_by('-timestamp')
 
-        other_user_ids = []
+        messages = Message.objects.filter(
+            Q(sender=user) | Q(receiver=user)
+        ).order_by('-timestamp')
+
+        chat_dict = {}
+
         for msg in messages:
-            other = msg.sender if msg.sender != user else msg.receiver
-            if other.id not in other_user_ids:
-                other_user_ids.append(other.id)
+            other_user = msg.sender if msg.sender != user else msg.receiver
 
-        users = User.objects.filter(id__in=other_user_ids)
-        serializer = RecentChatUserSerializer(users, many=True, context={'request': request})
-        return Response(serializer.data)
+            # Store only first occurrence (latest message)
+            if other_user.id not in chat_dict:
+                chat_dict[other_user.id] = {
+                    "user": RecentChatUserSerializer(
+                        other_user,
+                        context={"request": request}
+                    ).data,
+                    "last_message": msg.content,   # change if field name different
+                    "timestamp": msg.timestamp
+                }
+
+        return Response(list(chat_dict.values()))
+
     
 
 class ToggleLikeView(APIView):
