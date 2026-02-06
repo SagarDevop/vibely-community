@@ -150,7 +150,7 @@ class RecentChatsView(APIView):
                         other_user,
                         context={"request": request}
                     ).data,
-                    "last_message": msg.content,   # change if field name different
+                    "last_message": msg.text,   # change if field name different
                     "timestamp": msg.timestamp
                 }
 
