@@ -36,7 +36,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
             return
 
-        message_text = data.get("message")
+        message_text = data.get("text")
         sender_id = data.get("sender")
 
         if not message_text or not sender_id:
@@ -56,7 +56,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             {
                 "type": "chat_message",
                 "id": message.id,
-                "message": message.text,
+                "text": message.text,
                 "sender": message.sender_id,
                 "receiver": message.receiver_id,
                 "timestamp": message.timestamp.isoformat(),
