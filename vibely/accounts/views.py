@@ -138,23 +138,28 @@ class RecentChatsView(APIView):
             Q(sender=user) | Q(receiver=user)
         ).order_by('-timestamp')
 
-        chat_dict = {}
+        chat_list = []
+
+        added_users = set()
 
         for msg in messages:
             other_user = msg.sender if msg.sender != user else msg.receiver
 
-            # Store only first occurrence (latest message)
-            if other_user.id not in chat_dict:
-                chat_dict[other_user.id] = {
-                    "user": RecentChatUserSerializer(
-                        other_user,
-                        context={"request": request}
-                    ).data,
-                    "last_message": msg.text,   # change if field name different
-                    "timestamp": msg.timestamp
-                }
+            if other_user.id not in added_users:
 
-        return Response(list(chat_dict.values()))
+                other_user.last_message = msg.text
+                other_user.timestamp = msg.timestamp
+
+                chat_list.append(other_user)
+                added_users.add(other_user.id)
+
+        serializer = RecentChatUserSerializer(
+            chat_list,
+            many=True,
+            context={"request": request}
+        )
+
+        return Response(serializer.data)
 
     
 

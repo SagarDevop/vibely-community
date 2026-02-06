@@ -62,11 +62,22 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class RecentChatUserSerializer(serializers.ModelSerializer):
-    profile = ProfileSerializer(read_only=True)
+    name = serializers.CharField(source="profile.name", read_only=True)
+    avatar = serializers.CharField(source="profile.avatar", read_only=True)
+    last_message = serializers.CharField(read_only=True)
+    timestamp = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'profile']
-    
+        fields = [
+            "id",
+            "username",
+            "name",
+            "avatar",
+            "last_message",
+            "timestamp",
+        ]
+
     
     
     
