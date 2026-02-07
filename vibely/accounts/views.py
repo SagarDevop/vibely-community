@@ -105,6 +105,38 @@ class UserProfileView(generics.RetrieveAPIView):
     }
 })
 
+#search user
+
+
+class UserSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get("q", "").strip()
+
+        if not query:
+            return Response([])
+
+        users = User.objects.filter(
+            Q(username__istartswith=query) |
+            Q(profile__name__istartswith=query)
+        ).select_related("profile")[:20]
+
+        data = [
+            {
+                "id": user.id,
+                "username": user.username,
+                "name": user.profile.name,
+                "avatar": (
+                    user.profile.avatar.url if user.profile.avatar else None
+                )
+            }
+            for user in users
+        ]
+
+        return Response(data)
+
+
 
 class MessageListCreateView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
