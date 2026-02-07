@@ -9,12 +9,15 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ['username', 'name','avatar', 'bio', 'website', 'is_private', 'created_at', 'followers_count', 'following_count', 'is_following']
     def get_is_following(self, obj):
-        request = self.context.get("request")
-        if not request or request.user.is_anonymous:
-            return False
-        
-        # obj.user = actual User object behind profile
-        return obj.user.followers_set.filter(follower=request.user).exists()
+    request = self.context.get("request")
+    if not request or request.user.is_anonymous:
+        return False
+
+    return Follow.objects.filter(
+        follower=request.user,
+        following=obj.user
+    ).exists()
+
 
     
 class PostSerializer(serializers.ModelSerializer):
