@@ -113,14 +113,14 @@ class UserSearchView(ListAPIView):
     serializer_class = ProfileSerializer
 
     def get_queryset(self):
-        query = self.request.query_params.get('q', '').strip()
+        q = self.request.query_params.get('q', '').strip()
 
-        if not query:
-            return User.objects.none()
+        if not q:
+            return Profile.objects.none()
 
-        return User.objects.filter(
-            username__istartswith=query
-        ).select_related('profile')
+        return Profile.objects.filter(
+            user__username__istartswith=q
+        ).select_related('user')
 
 
 class MessageListCreateView(generics.ListCreateAPIView):
