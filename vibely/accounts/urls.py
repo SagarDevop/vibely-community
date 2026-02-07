@@ -7,7 +7,7 @@ from .views import (
     UserProfileView
 )
 from .views import RecentChatsView, ToggleLikeView, PostCommentsView, CommentDeleteView, list_notifications, mark_read, unread_notification_count, mark_all_read
-from .views import RegisterView, MeView, ProfileView, PostViewSet, MyPostsView, MessageListCreateView, UserProfilePostsView, UserSearchView
+from .views import RegisterView, MeView, ProfileView, PostViewSet, MyPostsView, MessageListCreateView, UserProfilePostsView
 from django.urls import path
 
 router = DefaultRouter()
@@ -22,7 +22,6 @@ urlpatterns = [
     path('messages/', MessageListCreateView.as_view(), name='messages'),
     path('user/<int:user_id>/', UserProfilePostsView.as_view(), name='user-profile-posts'),
     path('user/<str:username>/', UserProfileView.as_view(), name='user-profile-posts'),
-    path('users/search/', UserSearchView.as_view(), name='user-search'),
     path('recent-chats/', RecentChatsView.as_view(), name='recent-chats'),
      path("posts/<int:post_id>/like/", ToggleLikeView.as_view(), name="toggle-like"),
        path("posts/<int:post_id>/comments/", PostCommentsView.as_view(), name="post-comments"),

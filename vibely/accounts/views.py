@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions
-from .models import User, Post, Message, Like, Comment, Follow, Notification, Profile
+from .models import User, Post, Message, Like, Comment, Follow, Notification
 from django.db.models import Q
 from .serializers import UserSerializer,NotificationSerializer, ProfileSerializer, PostSerializer, MessageSerializer, RecentChatUserSerializer, CommentSerializer
 from rest_framework import generics
@@ -13,7 +13,6 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView
 # Create your views here.
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -105,22 +104,6 @@ class UserProfileView(generics.RetrieveAPIView):
         **profile_serializer.data
     }
 })
-
-# for search user
-
-class UserSearchView(ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = ProfileSerializer
-
-    def get_queryset(self):
-        q = self.request.query_params.get('q', '').strip()
-
-        if not q:
-            return Profile.objects.none()
-
-        return Profile.objects.filter(
-            user__username__istartswith=q
-        ).select_related('user')
 
 
 class MessageListCreateView(generics.ListCreateAPIView):

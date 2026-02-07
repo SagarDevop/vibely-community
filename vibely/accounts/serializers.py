@@ -5,32 +5,16 @@ from django.contrib.auth.hashers import make_password
 class ProfileSerializer(serializers.ModelSerializer):
     is_following = serializers.SerializerMethodField()
     username = serializers.CharField(source='user.username', read_only=True)
-
     class Meta:
         model = Profile
-        fields = [
-            'username',
-            'name',
-            'avatar',
-            'bio',
-            'website',
-            'is_private',
-            'created_at',
-            'followers_count',
-            'following_count',
-            'is_following',
-        ]
-
+        fields = ['username', 'name','avatar', 'bio', 'website', 'is_private', 'created_at', 'followers_count', 'following_count', 'is_following']
     def get_is_following(self, obj):
         request = self.context.get("request")
         if not request or request.user.is_anonymous:
             return False
-
-        return Follow.objects.filter(
-            follower=request.user,
-            following=obj.user
-        ).exists()
-
+        
+        # obj.user = actual User object behind profile
+        return obj.user.followers_set.filter(follower=request.user).exists()
 
     
 class PostSerializer(serializers.ModelSerializer):
