@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions
-from .models import User, Post, Message, Like, Comment, Follow, Notification
+from .models import User, Post, Message, Like, Comment, Follow, Notification, Profile
 from django.db.models import Q
 from .serializers import UserSerializer,NotificationSerializer, ProfileSerializer, PostSerializer, MessageSerializer, RecentChatUserSerializer, CommentSerializer
 from rest_framework import generics
