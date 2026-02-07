@@ -105,6 +105,22 @@ class UserProfileView(generics.RetrieveAPIView):
     }
 })
 
+# for search user
+
+class UserSearchView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProfileSerializer
+
+    def get_queryset(self):
+        query = self.request.query_params.get('q', '').strip()
+
+        if not query:
+            return User.objects.none()
+
+        return User.objects.filter(
+            username__istartswith=query
+        ).select_related('profile')
+
 
 class MessageListCreateView(generics.ListCreateAPIView):
     serializer_class = MessageSerializer
